@@ -9,7 +9,7 @@ Edit API key and move file from EKSのdeployment.yaml
 e.g.
 ```
 - image: docker.pkg.github.com/sbisecuritysolutions/fluentd/fluentd-with-datadog-plugin:latest
-  name: fluetnd
+  name: fluentd
 ...
   lifecycle:
     postStart:
