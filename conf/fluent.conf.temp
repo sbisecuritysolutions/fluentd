@@ -1,0 +1,77 @@
+# fluentd/conf/fluent.conf
+<source>
+  @type monitor_agent
+  bind 0.0.0.0
+  port 24220
+</source>
+
+<source>
+  @type tail
+  @id in_tail_container_logs
+  path /var/log/datadog/*.log
+  pos_file /var/log/fluentd-containers.log.post
+  tag datadog.**
+  read_from_head true
+  <parse>
+    @type regexp
+    expression /^(?<timestamp>[0-9\-\ \:]*) (?<timecode>[^| ]*) \| (?<location>[^| ]*) \| (?<status>[^| ]*) \| (?<logorigin>[^|]*) \| (?<logmessage>[^|]*)$/
+    time_key logtime
+    time_format %Y-%m-%d %H:%M:%S
+  </parse>
+  # Optional
+  include_tag_key true
+  tag_key 'tag'
+
+  # Optional tags
+  dd_source 'datadog-tail-eks'
+  # dd_tags '<KEY1:VALUE1>,<KEY2:VALUE2>'
+  service 'datadog-tail-eks'
+</source>
+
+<match datadog.**>
+  @type datadog
+  @id awesome_agent
+  api_key <DD_API_KEY>
+
+  # Optional
+  include_tag_key true
+  tag_key 'tag'
+
+  # Optional tags
+  dd_source 'datadog-eks'
+  # dd_tags '<KEY1:VALUE1>,<KEY2:VALUE2>'
+  service 'datadog-eks'
+
+  <buffer>
+          @type memory
+          flush_thread_count 4
+          flush_interval 3s
+          chunk_limit_size 5m
+          chunk_limit_records 500
+  </buffer>
+</match>
+<match agent.**>
+  @type datadog
+  @id awesome_agent_log
+  api_key <DD_API_KEY>
+
+  # Optional
+  include_tag_key true
+  tag_key 'tag'
+
+  # Optional tags
+  dd_source 'datadog-agent-eks'
+  # dd_tags '<KEY1:VALUE1>,<KEY2:VALUE2>'
+  service 'datadog-agent-eks'
+
+  <buffer>
+          @type memory
+          flush_thread_count 4
+          flush_interval 3s
+          chunk_limit_size 5m
+          chunk_limit_records 500
+  </buffer>
+</match>
+<match fluent.**>
+  @type null
+</match>
